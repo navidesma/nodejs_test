@@ -1,21 +1,30 @@
 import express from "express";
-import variables from "./util/variables.js";
 import sequelize from "./util/database.js";
-import person from "./controllers/person.js";
+import {join} from "path";
+import * as url from "url";
+import bodyParser from "body-parser";
+
+import personRouter from "./routes/person.js";
 
 const server = express();
+const __dirname = url.fileURLToPath(new URL('.', import.meta.url));
+
+server.use(bodyParser.urlencoded({ extended: true }));
 
 // setting view engine and setting views directory
 server.set("view engine", "ejs");
-server.set("views", variables.VIEWS_PATH);
+server.set("views", join(__dirname, "views"));
 
 // setting static files directory with is ./public
-server.use(express.static(variables.PUBLIC_PATH));
+server.use(express.static(join(__dirname, "public")));
 
 // routing
-server.get("/", async (req, res) => {
-    await person();
-    res.render("index");
+server.use(personRouter);
+
+//Error handler middleware
+server.use((error, req, res, next) => {
+    console.log(error.message);
+    res.render("404", {errorMessage: error.message ? error.message : "Forbidden Request!"});
 })
 
 // run the application,
