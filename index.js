@@ -32,7 +32,7 @@ async function runTheApp() {
     try {
         console.log("_____________________________\nChecking database\n_____________________________");
         await sequelize.authenticate();
-        const result = await sequelize.sync();
+        const result = await sequelize.sync({force: true});
         // console.log('Connection has been established successfully.\n', result);
         server.listen(8080, () => {
             console.log("_____________________________\nApp Start");

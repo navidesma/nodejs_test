@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <link rel="stylesheet" href="/css/bootstrap.min.css">
+    <title>Document</title>
+</head>
+<body>
+<div class="container">
+    <div class="row">
+        <div class="col-md-12">
+            <form action="/editPerson/<%= id %>" method="post">
+                <div class="form-group">
+                    <label for="exampleInputEmail1">New Person Name</label>
+                    <input type="text" class="form-control" id="exampleInputEmail1" name="name" value="<%= name %>">
+                </div>
+                <div class="form-group">
+                    <label for="exampleInputEmail2">New Age</label>
+                    <input type="number" class="form-control" id="exampleInputEmail2" name="age" value="<%= age %>">
+                </div>
+                <div class="form-group">
+                    <label for="gender">New Gender</label>
+                    <select class="form-select form-select-lg mb-3" aria-label=".form-select-lg example" id="gender"
+                            name="gender">
+                        <option value="female" <% if (gender == "female") { %> <%- selected="selected" %> <% } %>>Female</option>
+                        <option value="male" <% if (gender == "male") { %> <%- selected="selected" %> <% } %>>Male</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary">Submit</button>
+            </form>
+        </div>
+    </div>
+</div>
+</body>
+</html>

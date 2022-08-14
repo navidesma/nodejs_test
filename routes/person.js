@@ -1,5 +1,5 @@
 import { Router } from "express";
-import {createPerson, deletePerson, getAllPersons} from "../controllers/person.js";
+import {createPerson, deletePerson, editPerson, getAllPersons, getPersonForEdit} from "../controllers/person.js";
 
 const personRouter = Router();
 
@@ -9,7 +9,10 @@ personRouter.get("/index", getAllPersons);
 
 personRouter.post("/addNewPerson", createPerson);
 
-personRouter.post("/deletePerson/:id", deletePerson);
+personRouter.get("/removePerson/:id", deletePerson);
+
+personRouter.get("/edit-person/:id", getPersonForEdit);
+personRouter.post("/editPerson/:id", editPerson);
 
 
 export default personRouter;
