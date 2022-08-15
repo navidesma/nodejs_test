@@ -3,7 +3,7 @@ import sequelizeInstance from "./util/database.js";
 import {join} from "path";
 import * as url from "url";
 import session from "express-session";
-import postgresSessionStore from "connect-pg-simple";
+import MySQLStore from "express-mysql-session";
 
 import Person from "./models/person.js";
 import User from "./models/user.js";
@@ -15,8 +15,9 @@ import authRouter from "./routes/auth.js";
 
 const server = express();
 const __dirname = url.fileURLToPath(new URL('.', import.meta.url));
-const conString = "postgres://postgres:salam12345@localhost:5432/nodejstest";
-const Store = postgresSessionStore(session);
+const Store = MySQLStore(session);
+const STORE_OPTIONS = {host: 'localhost', port: 3306, user: 'root', password: 'salam12345', database: 'fornode'};
+const sessionStore = new Store(STORE_OPTIONS);
 
 server.use(express.urlencoded({ extended: true }));
 
@@ -30,7 +31,7 @@ server.set("views", join(__dirname, "views"));
 server.use(express.static(join(__dirname, "public")));
 
 // add session to route
-server.use(session({secret: "This is super secret", resave: false, saveUninitialized: false, store: new Store({conString})}));
+server.use(session({secret: "This is super secret", resave: false, saveUninitialized: false, store: sessionStore}));
 
 // routing
 server.use(authRouter);
