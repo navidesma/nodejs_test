@@ -34,13 +34,17 @@ server.use(express.static(join(__dirname, "public")));
 server.use(session({secret: "This is super secret", resave: false, saveUninitialized: false, store: sessionStore}));
 
 // routing
+server.use((req, res, next) => {
+    res.locals.isAuthenticated = req.session.isLoggedIn;
+    next();
+});
 server.use(authRouter);
 server.use(personRouter);
 
 //Error handler middleware
 server.use((error, req, res, next) => {
     console.log(error.message);
-    res.render("404", {errorMessage: error.message ? error.message : "Forbidden Request!"});
+    res.status(404).render("404", {errorMessage: error.message ? error.message : "Bad Request!"});
 })
 
 Person.belongsTo(User, {constraints: true, onDelete: "CASCADE"});
@@ -52,9 +56,7 @@ async function runTheApp() {
         console.log("_____________________________\nChecking database\n_____________________________");
         await sequelizeInstance.authenticate();
         await sequelizeInstance.sync();
-        const defaultUser = await User.findByPk(1);
-        if (!defaultUser)
-            await User.create({username: "navid", password: "complicated"});
+        // await sequelizeInstance.sync({force: true});
 
         server.listen(8080, () => {
             console.log("_____________________________\nApp Start");

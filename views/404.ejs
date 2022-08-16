@@ -1,10 +1,14 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Error</title>
+<%- include('./partials/head.ejs') %>
+<title>Error</title>
 </head>
 <body>
-<h1><%= errorMessage %></h1>
+<div class="container bg-danger rounded">
+    <div class="row mt-5">
+        <div class="com-md-12">
+            <h1 class="text-center text-light">404</h1>
+            <h2 class="text-center text-light"><%= errorMessage %></h2>
+        </div>
+    </div>
+</div>
 </body>
 </html>

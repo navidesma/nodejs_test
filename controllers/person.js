@@ -1,4 +1,5 @@
 import Person from "../models/person.js";
+import User from "../models/user.js";
 
 const ID_PATTERN = /^\d+$/g;
 const NAME_PATTERN = /^[a-zA-Z]+$/g;
@@ -14,9 +15,10 @@ export async function createPerson(req, res, next) {
         if (!(name.match(NAME_PATTERN) && age.match(AGE_PATTERN) && gender.match(GENDER_PATTERN)))
             throw new Error("invalid data");
 
-        const personDoesAlreadyExist = await Person.findOne({where: {name: name}});
+        const personDoesAlreadyExist = await req.user.getPeople({where: {name: name}});
+    console.log("__________create_person________\n" + personDoesAlreadyExist);
         if (!personDoesAlreadyExist)
-            await Person.create({name, age, gender});
+            await req.user.createPeople({name, age, gender});
 
         res.redirect("/");
     } catch (error) {
