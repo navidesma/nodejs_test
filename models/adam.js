@@ -1,7 +1,7 @@
 import Sequelize from "sequelize";
 import sequelizeInstance from "../util/database.js";
 
-const Person = sequelizeInstance.define('Person', {
+const Adam = sequelizeInstance.define('Adam', {
     id: {
         type: Sequelize.INTEGER, autoIncrement: true, allowNull: false, primaryKey: true
     }, name: {
@@ -13,4 +13,4 @@ const Person = sequelizeInstance.define('Person', {
     }
 })
 
-export default Person;
+export default Adam;

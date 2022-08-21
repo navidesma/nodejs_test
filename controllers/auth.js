@@ -1,7 +1,9 @@
 import User from "../models/user.js";
+import validator from "../util/validator.js";
 
-const EMAIL_PATTERN = /^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/g;
-const PASSWORD_PATTERN = /^$/g;
+// const EMAIL_PATTERN = /^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/g;
+const NAME_PATTERN = /^[a-zA-Z]+$/g;
+const PASSWORD_PATTERN = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[a-zA-Z]).{8,}$/g;
 
 export default function getSignUp(req, res, next) {
     try {
@@ -13,8 +15,9 @@ export default function getSignUp(req, res, next) {
 
 export async function postSignUp(req, res, next) {
     try {
-        if (!req.body.username || !req.body.password)
-            throw new Error("invalid data");
+        const validationResult = validator(req, ["username", NAME_PATTERN, "password", PASSWORD_PATTERN]);
+        if (validationResult !== true)
+            throw new Error(validationResult);
 
         const {username, password} = req.body;
         const user = await User.findOne({where: {username}});
@@ -26,6 +29,7 @@ export async function postSignUp(req, res, next) {
         const newUser = await User.findOne({where: {username}});
         req.session.isLoggedIn = true;
         req.session.user = newUser;
+        req.user = newUser;
         await req.session.save();
         res.redirect("/index");
     } catch (error) {
@@ -35,17 +39,19 @@ export async function postSignUp(req, res, next) {
 
 export async function postSignIn(req, res, next) {
     try {
-        if (!req.body.username || !req.body.password)
-            throw new Error("invalid data");
+        const validationResult = validator(req, ["username", NAME_PATTERN, "password", PASSWORD_PATTERN]);
+        if (validationResult !== true)
+            throw new Error(validationResult);
 
         const {username, password} = req.body;
-        const user = await User.findOne({where: {username, password}});
+        const user = await User.findOne({where: {username}});
         if (!user)
             throw new Error("user doesn't exist");
+        if (user.password !== password)
+            throw new Error("Wrong password");
 
         req.session.isLoggedIn = true;
         req.session.user = user;
-        req.user = user;
         await req.session.save();
         res.redirect("index");
     } catch (error) {
@@ -68,5 +74,9 @@ export async function getLogout(req, res, next) {
 }
 
 export async function getSignIn(req, res, next) {
-    res.render("signin");
+    try {
+        res.render("signin");
+    } catch (error) {
+        next(error);
+    }
 }

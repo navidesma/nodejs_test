@@ -5,12 +5,11 @@ import * as url from "url";
 import session from "express-session";
 import MySQLStore from "express-mysql-session";
 
-import Person from "./models/person.js";
+import Adam from "./models/adam.js";
 import User from "./models/user.js";
 
 import personRouter from "./routes/person.js";
 import authRouter from "./routes/auth.js";
-
 
 
 const server = express();
@@ -19,9 +18,8 @@ const Store = MySQLStore(session);
 const STORE_OPTIONS = {host: 'localhost', port: 3306, user: 'root', password: 'salam12345', database: 'fornode'};
 const sessionStore = new Store(STORE_OPTIONS);
 
-server.use(express.urlencoded({ extended: true }));
+server.use(express.urlencoded({extended: true}));
 
-server.use(async (req, res, next) => {req.user = await User.findByPk(1); next();});
 
 // setting view engine and setting views directory
 server.set("view engine", "ejs");
@@ -32,6 +30,20 @@ server.use(express.static(join(__dirname, "public")));
 
 // add session to route
 server.use(session({secret: "This is super secret", resave: false, saveUninitialized: false, store: sessionStore}));
+
+// Add user to req
+server.use(async (req, res, next) => {
+    if (!req.session.user) {
+        return next();
+    }
+    try {
+        const user = await User.findByPk(req.session.user.id);
+        req.user = user;
+        next();
+    } catch (error) {
+        next(error);
+    }
+})
 
 // routing
 server.use((req, res, next) => {
@@ -47,8 +59,8 @@ server.use((error, req, res, next) => {
     res.status(404).render("404", {errorMessage: error.message ? error.message : "Bad Request!"});
 })
 
-Person.belongsTo(User, {constraints: true, onDelete: "CASCADE"});
-User.hasMany(Person);
+Adam.belongsTo(User, {constraints: true, onDelete: "CASCADE"});
+User.hasMany(Adam);
 
 // run the application,
 async function runTheApp() {
