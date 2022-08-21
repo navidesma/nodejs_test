@@ -9,12 +9,15 @@ const GENDER_PATTERN = /^(male||female)$/g;
 export async function createPerson(req, res, next) {
     try {
         const validationResult = validator(req, ["name", NAME_PATTERN, "age", AGE_PATTERN, "gender", GENDER_PATTERN]);
-        if (validationResult !== true)
-            throw new Error(validationResult);
+        if (validationResult !== true) {
+            const error = new Error(validationResult);
+            error.type = "user";
+            throw error;
+        }
 
         const {name, age, gender} = req.body;
-        const personDoesAlreadyExist = await req.user.hasAdam({where: {name}});
 
+        const personDoesAlreadyExist = await Adam.findOne({where: {name, UserId: req.user.id}});
         if (!personDoesAlreadyExist)
             await req.user.createAdam({name, age, gender});
 
@@ -27,16 +30,24 @@ export async function createPerson(req, res, next) {
 export async function deletePerson(req, res, next) {
     try {
         const validationResult = validator(req, ["id", ID_PATTERN], true);
-        if (validationResult !== true)
-            throw new Error(validationResult);
+        if (validationResult !== true) {
+            const error = new Error(validationResult);
+            error.type = "user";
+            throw error;
+        }
 
         const id = req.params.id;
         const person = await Adam.findByPk(id);
-        if (!person)
-            throw new Error("This person doesn't exist");
-        if (person.UserId !== req.user.id)
-            throw new Error(`This person doesn't belong to ${req.user.username}, Forbidden Request!`);
-
+        if (!person) {
+            const error = new Error("This Person Doesn't Exist");
+            error.type = "user";
+            throw error;
+        }
+        if (person.UserId !== req.user.id) {
+            const error = new Error(`This person doesn't belong to ${req.user.username}, Forbidden Request!`);
+            error.type = "user";
+            throw error;
+        }
 
         await person.destroy();
         res.redirect("/");
@@ -47,15 +58,25 @@ export async function deletePerson(req, res, next) {
 export async function getPersonForEdit(req, res, next) {
     try {
         const validationResult = validator(req, ["id", ID_PATTERN], true);
-        if (validationResult !== true)
-            throw new Error(validationResult);
+        if (validationResult !== true)  {
+            const error = new Error(`This person doesn't belong to ${req.user.username}, Forbidden Request!`);
+            error.type = "user";
+            throw error;
+        }
 
         const id = req.params.id;
         const person = await Adam.findByPk(id);
-        if (!person)
-            throw new Error("This person doesn't exist");
-        if (person.UserId !== req.user.id)
-            throw new Error(`This person doesn't belong to ${req.user.username}, Forbidden Request!`);
+        if (!person) {
+            const error = new Error("This Person Doesn't Exist");
+            error.type = "user";
+            throw error;
+        }
+        if (person.UserId !== req.user.id) {
+            const error = new Error(`This person doesn't belong to ${req.user.username}, Forbidden Request!`);
+            error.type = "user";
+            throw error;
+        }
+        
         const {name, age, gender} = person;
         res.render("edit-person", {name, age, gender, id});
     } catch (error) {
@@ -65,22 +86,34 @@ export async function getPersonForEdit(req, res, next) {
 export async function editPerson(req, res, next) {
     try {
         const validationResult1 = validator(req, ["name", NAME_PATTERN, "age", AGE_PATTERN, "gender", GENDER_PATTERN]);
-        if (validationResult1 !== true)
-            throw new Error(validationResult1);
+        if (validationResult1 !== true) {
+            const error = new Error(validationResult1);
+            error.type = "user";
+            throw error;
+        }
 
         const validationResult2 = validator(req, ["id", ID_PATTERN], true);
-        if (validationResult2 !== true)
-            throw new Error(validationResult2);
+        if (validationResult2 !== true) {
+            const error = new Error(validationResult2);
+            error.type = "user";
+            throw error;
+        }
 
         const {id} = req.params;
         const {name, age, gender} = req.body;
 
 
         const person = await Adam.findByPk(id);
-        if (!person)
-            throw new Error("This person doesn't exist");
-        if (person.UserId !== req.user.id)
-            throw new Error(`This person doesn't belong to ${req.user.username}, Forbidden Request!`);
+        if (!person) {
+            const error = new Error("This Person Doesn't Exist");
+            error.type = "user";
+            throw error;
+        }
+        if (person.UserId !== req.user.id) {
+            const error = new Error(`This person doesn't belong to ${req.user.username}, Forbidden Request!`);
+            error.type = "user";
+            throw error;
+        }
 
         person.name = name;
         person.age = age;

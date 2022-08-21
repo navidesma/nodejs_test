@@ -16,13 +16,19 @@ export default function getSignUp(req, res, next) {
 export async function postSignUp(req, res, next) {
     try {
         const validationResult = validator(req, ["username", NAME_PATTERN, "password", PASSWORD_PATTERN]);
-        if (validationResult !== true)
-            throw new Error(validationResult);
+        if (validationResult !== true) {
+            const error = new Error(validationResult);
+            error.type = "user";
+            throw error;
+        }
 
         const {username, password} = req.body;
         const user = await User.findOne({where: {username}});
-        if (user)
-            throw new Error("User already exists");
+        if (user) {
+            const error = new Error("User Already Exists.");
+            error.type = "user";
+            throw error;
+        }
 
         await User.create({username, password});
 
@@ -40,15 +46,24 @@ export async function postSignUp(req, res, next) {
 export async function postSignIn(req, res, next) {
     try {
         const validationResult = validator(req, ["username", NAME_PATTERN, "password", PASSWORD_PATTERN]);
-        if (validationResult !== true)
-            throw new Error(validationResult);
+        if (validationResult !== true) {
+            const error = new Error(validationResult);
+            error.type = "user";
+            throw error;
+        }
 
         const {username, password} = req.body;
         const user = await User.findOne({where: {username}});
-        if (!user)
-            throw new Error("user doesn't exist");
-        if (user.password !== password)
-            throw new Error("Wrong password");
+        if (!user) {
+            const error = new Error("User Doesn't Exist");
+            error.type = "user";
+            throw error;
+        }
+        if (user.password !== password) {
+            const error = new Error("Wrong Password");
+            error.type = "user";
+            throw error;
+        }
 
         req.session.isLoggedIn = true;
         req.session.user = user;

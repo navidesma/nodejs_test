@@ -1,7 +1,6 @@
 import express from "express";
 import sequelizeInstance from "./util/database.js";
 import {join} from "path";
-import * as url from "url";
 import session from "express-session";
 import MySQLStore from "express-mysql-session";
 import csrf from "csurf";
@@ -13,11 +12,14 @@ import User from "./models/user.js";
 import personRouter from "./routes/person.js";
 import authRouter from "./routes/auth.js";
 
+import {__dirname} from "./util/variables.js";
+import logger from "./util/log-configuration.js";
+
+//____________________________________________________________________________________________________________________
+
 // use .env
 dotenv.config();
 const {APPLICATION_PORT, DATABASE_HOST, DATABASE_USER, DATABASE_PASSWORD, DATABASE_NAME, DATABASE_PORT} = process.env;
-const __dirname = url.fileURLToPath(new URL('.', import.meta.url));
-
 
 const server = express();
 
@@ -72,8 +74,20 @@ server.use(personRouter);
 
 //Error handler middleware
 server.use((error, req, res, next) => {
+    if (!error.type) {
+        error.type = "critical";
+    }
+    console.log(error.type);
     console.log(error.message);
-    res.status(404).render("404", {errorMessage: error.message ? error.message : "Bad Request!"});
+    if (error) {
+        if (error.type === "user")
+            res.status(404).render("404", {errorMessage: error.message ? error.message : "Bad Request!"});
+
+        else {
+            logger.error("Unknown Error: " + error.message);
+            res.status(500).render("404", {errorMessage: "Something Went Wrong"});
+        }
+    }
 })
 
 Adam.belongsTo(User, {constraints: true, onDelete: "CASCADE"});
@@ -91,7 +105,8 @@ async function runTheApp() {
             console.log("_____________________________\nApp Start");
         });
     } catch (error) {
-        console.error('Unable to connect to the database:', error);
+        // console.error('Unable to connect to the database:', error);
+        logger.error('Unable to connect to the database:' + error);
     }
 }
 
