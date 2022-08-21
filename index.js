@@ -4,6 +4,8 @@ import {join} from "path";
 import * as url from "url";
 import session from "express-session";
 import MySQLStore from "express-mysql-session";
+import csrf from "csurf";
+import dotenv from "dotenv";
 
 import Adam from "./models/adam.js";
 import User from "./models/user.js";
@@ -11,12 +13,21 @@ import User from "./models/user.js";
 import personRouter from "./routes/person.js";
 import authRouter from "./routes/auth.js";
 
+// use .env
+dotenv.config();
+const {APPLICATION_PORT, DATABASE_HOST, DATABASE_USER, DATABASE_PASSWORD, DATABASE_NAME, DATABASE_PORT} = process.env;
+const __dirname = url.fileURLToPath(new URL('.', import.meta.url));
+
 
 const server = express();
-const __dirname = url.fileURLToPath(new URL('.', import.meta.url));
+
+// session store
 const Store = MySQLStore(session);
-const STORE_OPTIONS = {host: 'localhost', port: 3306, user: 'root', password: 'salam12345', database: 'fornode'};
+const STORE_OPTIONS = {host: DATABASE_HOST, port: DATABASE_PORT || 3306, user: DATABASE_USER, password: DATABASE_PASSWORD, database: DATABASE_NAME};
 const sessionStore = new Store(STORE_OPTIONS);
+
+const csrfProtection = csrf();
+
 
 server.use(express.urlencoded({extended: true}));
 
@@ -28,8 +39,11 @@ server.set("views", join(__dirname, "views"));
 // setting static files directory which is ./public
 server.use(express.static(join(__dirname, "public")));
 
-// add session to route
+// add session to req
 server.use(session({secret: "This is super secret", resave: false, saveUninitialized: false, store: sessionStore}));
+
+// add csrfToken to req
+server.use(csrfProtection);
 
 // Add user to req
 server.use(async (req, res, next) => {
@@ -45,11 +59,14 @@ server.use(async (req, res, next) => {
     }
 })
 
-// routing
+// add variables to renders
 server.use((req, res, next) => {
     res.locals.isAuthenticated = req.session.isLoggedIn;
+    res.locals.csrfToken = req.csrfToken();
     next();
 });
+
+// routing
 server.use(authRouter);
 server.use(personRouter);
 
@@ -70,7 +87,7 @@ async function runTheApp() {
         await sequelizeInstance.sync();
         // await sequelizeInstance.sync({force: true});
 
-        server.listen(8080, () => {
+        server.listen(APPLICATION_PORT, () => {
             console.log("_____________________________\nApp Start");
         });
     } catch (error) {
