@@ -10,6 +10,8 @@ const Adam = sequelizeInstance.define('Adam', {
         type: Sequelize.INTEGER, allowNull: false
     }, gender: {
         type: Sequelize.STRING, allowNull: false
+    }, imageUrl: {
+        type: Sequelize.STRING, allowNull: false
     }
 })
 

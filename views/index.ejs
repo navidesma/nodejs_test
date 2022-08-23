@@ -6,7 +6,7 @@
 <div class="container">
     <div class="row">
         <div class="col-md-12">
-            <form action="/addNewPerson" method="post">
+            <form action="/addNewPerson" method="post" enctype="multipart/form-data">
                 <div class="form-group">
                     <label for="exampleInputEmail1">Person's Name</label>
                     <input type="text" class="form-control" id="exampleInputEmail1" name="name">
@@ -23,6 +23,10 @@
                         <option value="male">Male</option>
                     </select>
                 </div>
+                <div class="mb-3">
+                    <label for="formFile" class="form-label">Choose an Image</label>
+                    <input class="form-control" type="file" id="formFile" name="image">
+                  </div>
                 <input type="hidden" name="_csrf" value="<%= csrfToken %>">
                 <button type="submit" class="btn btn-primary">Submit</button>
             </form>
@@ -33,9 +37,9 @@
         <% if (persons) { %>
             <ul class="list-group">
                 <% for (person of persons) { %>
-                    <li class="list-group-item d-flex justify-content-between"><p>Name: <%= person.dataValues.name %>,
-                            Age: <%= person.dataValues.age %>, Gender: <%= person.dataValues.gender %>
-                        </p><div><a class="btn btn-danger" href="/removePerson/<%= person.dataValues.id %>">Delete</a>
+                    <li class="list-group-item d-flex justify-content-between"><div><p>Name: <%= person.dataValues.name %>,
+                                Age: <%= person.dataValues.age %>, Gender: <%= person.dataValues.gender %>
+                            </p><img class="img-thumbnail rounded-5" src="<%= person.dataValues.imageUrl %>" alt="" width="200" height="200"></div><div><a class="btn btn-danger" href="/removePerson/<%= person.dataValues.id %>">Delete</a>
                             <a class="btn btn-warning" href="/edit-person/<%= person.dataValues.id %>">Edit</a>
                         </div>
                     </li>

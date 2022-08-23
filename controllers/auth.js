@@ -3,7 +3,8 @@ import validator from "../util/validator.js";
 
 // const EMAIL_PATTERN = /^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/g;
 const NAME_PATTERN = /^[a-zA-Z]+$/g;
-const PASSWORD_PATTERN = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[a-zA-Z]).{8,}$/g;
+// const PASSWORD_PATTERN = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[a-zA-Z]).{8,}$/g;
+const PASSWORD_PATTERN = /^([\d\w]){2,}$/g;
 
 export default function getSignUp(req, res, next) {
     try {

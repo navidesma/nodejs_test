@@ -5,12 +5,16 @@ import session from "express-session";
 import MySQLStore from "express-mysql-session";
 import csrf from "csurf";
 import dotenv from "dotenv";
+import multer, {diskStorage} from "multer";
+import { v4 as uuidv4 } from "uuid";
 
 import Adam from "./models/adam.js";
 import User from "./models/user.js";
 
 import personRouter from "./routes/person.js";
 import authRouter from "./routes/auth.js";
+import addUserToReq from "./middleware/add-user-to-req.js";
+import errorHandler from "./middleware/error-handler.js";
 
 import {__dirname} from "./util/variables.js";
 import logger from "./util/log-configuration.js";
@@ -23,6 +27,22 @@ const {APPLICATION_PORT, DATABASE_HOST, DATABASE_USER, DATABASE_PASSWORD, DATABA
 
 const server = express();
 
+// multer
+const fileStorage = diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, "images");
+    },
+    filename: (req, file, cb) => {
+        cb(null, uuidv4() + "_" + file.originalname);
+    }
+});
+const fileFilter = (req, file, cb) => {
+    if (file.mimetype === "image/png" || file.mimetype === "image/jpg" || file.mimetype === "image/jpeg")
+        cb(null, true);
+    else
+        cb(null, false);
+};
+
 // session store
 const Store = MySQLStore(session);
 const STORE_OPTIONS = {host: DATABASE_HOST, port: DATABASE_PORT || 3306, user: DATABASE_USER, password: DATABASE_PASSWORD, database: DATABASE_NAME};
@@ -32,6 +52,7 @@ const csrfProtection = csrf();
 
 
 server.use(express.urlencoded({extended: true}));
+server.use(multer({storage: fileStorage, fileFilter}).single("image"));
 
 
 // setting view engine and setting views directory
@@ -40,26 +61,13 @@ server.set("views", join(__dirname, "views"));
 
 // setting static files directory which is ./public
 server.use(express.static(join(__dirname, "public")));
+server.use('/images', express.static(join(__dirname, 'images')));
 
 // add session to req
 server.use(session({secret: "This is super secret", resave: false, saveUninitialized: false, store: sessionStore}));
 
 // add csrfToken to req
 server.use(csrfProtection);
-
-// Add user to req
-server.use(async (req, res, next) => {
-    if (!req.session.user) {
-        return next();
-    }
-    try {
-        const user = await User.findByPk(req.session.user.id);
-        req.user = user;
-        next();
-    } catch (error) {
-        next(error);
-    }
-})
 
 // add variables to renders
 server.use((req, res, next) => {
@@ -68,27 +76,18 @@ server.use((req, res, next) => {
     next();
 });
 
-// routing
+// Auth routes
 server.use(authRouter);
+
+// Add user to req
+server.use(addUserToReq);
+
+
+// main routes
 server.use(personRouter);
 
 //Error handler middleware
-server.use((error, req, res, next) => {
-    if (!error.type) {
-        error.type = "critical";
-    }
-    console.log(error.type);
-    console.log(error.message);
-    if (error) {
-        if (error.type === "user")
-            res.status(404).render("404", {errorMessage: error.message ? error.message : "Bad Request!"});
-
-        else {
-            logger.error("Unknown Error: " + error.message);
-            res.status(500).render("404", {errorMessage: "Something Went Wrong"});
-        }
-    }
-})
+server.use(errorHandler);
 
 Adam.belongsTo(User, {constraints: true, onDelete: "CASCADE"});
 User.hasMany(Adam);
