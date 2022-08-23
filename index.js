@@ -61,7 +61,6 @@ server.set("views", join(__dirname, "views"));
 
 // setting static files directory which is ./public
 server.use(express.static(join(__dirname, "public")));
-server.use('/images', express.static(join(__dirname, 'images')));
 
 // add session to req
 server.use(session({secret: "This is super secret", resave: false, saveUninitialized: false, store: sessionStore}));
@@ -82,11 +81,31 @@ server.use(authRouter);
 // Add user to req
 server.use(addUserToReq);
 
-
+// Get image route
+server.get('/images/:imageFileName', async (req, res, next) => {
+        try {
+            if (!req.params.imageUrl) {
+                const person = await Adam.findOne({where: {imageUrl: join("images", req.params.imageFileName), UserId: req.user.id}});
+                if (!person) {
+                    const error = new Error("You can't access this file");
+                    error.type = "user";
+                    throw error;
+                }
+                res.sendFile(join(__dirname, 'images', req.params.imageFileName));
+            } else {
+                throw new Error("Wrong URl");
+            }
+        } catch (error) {
+            next(error);
+        }
+        
+        });
 // main routes
 server.use(personRouter);
 
 //Error handler middleware
+server.get("*", (req, res, next) => {res.status(404).render("404", {errorMessage: "Page Not Found"});});
+server.post("*", (req, res, next) => {res.status(404).render("404", {errorMessage: "Page Not Found"});});
 server.use(errorHandler);
 
 Adam.belongsTo(User, {constraints: true, onDelete: "CASCADE"});
