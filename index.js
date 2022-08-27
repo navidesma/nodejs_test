@@ -6,7 +6,7 @@ import MySQLStore from "express-mysql-session";
 import csrf from "csurf";
 import dotenv from "dotenv";
 import multer, {diskStorage} from "multer";
-import { v4 as uuidv4 } from "uuid";
+import {v4 as uuidv4} from "uuid";
 
 import Adam from "./models/adam.js";
 import User from "./models/user.js";
@@ -18,6 +18,7 @@ import errorHandler from "./middleware/error-handler.js";
 
 import {__dirname} from "./util/variables.js";
 import logger from "./util/log-configuration.js";
+import checkFileExistence from "./util/check-file-existance.js";
 
 //____________________________________________________________________________________________________________________
 
@@ -45,7 +46,13 @@ const fileFilter = (req, file, cb) => {
 
 // session store
 const Store = MySQLStore(session);
-const STORE_OPTIONS = {host: DATABASE_HOST, port: DATABASE_PORT || 3306, user: DATABASE_USER, password: DATABASE_PASSWORD, database: DATABASE_NAME};
+const STORE_OPTIONS = {
+    host: DATABASE_HOST,
+    port: DATABASE_PORT || 3306,
+    user: DATABASE_USER,
+    password: DATABASE_PASSWORD,
+    database: DATABASE_NAME
+};
 const sessionStore = new Store(STORE_OPTIONS);
 
 const csrfProtection = csrf();
@@ -83,29 +90,47 @@ server.use(addUserToReq);
 
 // Get image route
 server.get('/images/:imageFileName', async (req, res, next) => {
-        try {
-            if (!req.params.imageUrl) {
-                const person = await Adam.findOne({where: {imageUrl: join("images", req.params.imageFileName), UserId: req.user.id}});
-                if (!person) {
-                    const error = new Error("You can't access this file");
-                    error.type = "user";
-                    throw error;
+    try {
+        if (!req.params.imageUrl) {
+            const person = await Adam.findOne({
+                where: {
+                    imageUrl: join("images", req.params.imageFileName),
+                    UserId: req.user.id
                 }
-                res.sendFile(join(__dirname, 'images', req.params.imageFileName));
-            } else {
-                throw new Error("Wrong URl");
+            });
+            if (!person) {
+                const error = new Error("You can't access this file");
+                error.type = "user";
+                throw error;
             }
-        } catch (error) {
-            next(error);
+            const filePath = join(__dirname, 'images', req.params.imageFileName);
+            const doesFileExist = await checkFileExistence(filePath);
+            if (!doesFileExist) {
+                const error = new Error("File Doesn't Exist");
+                error.type = "user";
+                throw error;
+            }
+            res.sendFile(filePath);
+        } else {
+            const error = new Error("Wrong URL");
+            error.type = "user";
+            throw error;
         }
-        
-        });
+    } catch (error) {
+        res.status(400).send(error.message);
+    }
+
+});
 // main routes
 server.use(personRouter);
 
 //Error handler middleware
-server.get("*", (req, res, next) => {res.status(404).render("404", {errorMessage: "Page Not Found"});});
-server.post("*", (req, res, next) => {res.status(404).render("404", {errorMessage: "Page Not Found"});});
+server.get("*", (req, res, next) => {
+    res.status(404).render("404", {errorMessage: "Page Not Found"});
+});
+server.post("*", (req, res, next) => {
+    res.status(404).render("404", {errorMessage: "Page Not Found"});
+});
 server.use(errorHandler);
 
 Adam.belongsTo(User, {constraints: true, onDelete: "CASCADE"});
