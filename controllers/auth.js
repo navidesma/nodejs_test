@@ -1,9 +1,10 @@
 import User from "../models/user.js";
 import validator from "../util/validator.js";
+import {hash, compare} from "bcrypt";
 
 // const EMAIL_PATTERN = /^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/g;
-const NAME_PATTERN = /^[a-zA-Z]+$/g;
 // const PASSWORD_PATTERN = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[a-zA-Z]).{8,}$/g;
+const NAME_PATTERN = /^[a-zA-Z]+$/g;
 const PASSWORD_PATTERN = /^([\d\w]){2,}$/g;
 
 export default function getSignUp(req, res, next) {
@@ -30,8 +31,8 @@ export async function postSignUp(req, res, next) {
             error.type = "user";
             throw error;
         }
-
-        await User.create({username, password});
+        const hashedPassword = await hash(password, 12);
+        await User.create({username, password: hashedPassword});
 
         const newUser = await User.findOne({where: {username}});
         req.session.isLoggedIn = true;
@@ -60,7 +61,8 @@ export async function postSignIn(req, res, next) {
             error.type = "user";
             throw error;
         }
-        if (user.password !== password) {
+        const isEqual = await compare(password, user.password);
+        if (!isEqual) {
             const error = new Error("Wrong Password");
             error.type = "user";
             throw error;

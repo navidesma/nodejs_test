@@ -1,3 +1,5 @@
+import xss from "xss";
+
 export default function validator(req, args, isParams = false) {
     let reqData;
     if (!isParams)
@@ -18,6 +20,7 @@ export default function validator(req, args, isParams = false) {
             if (!(data.match(args[i + 1]))) {
                 return `Invalid Data: Invalid Entry [${args[i]}].`;
             }
+            reqData[`${args[i]}`] = xss(data);
         }
     }
 
