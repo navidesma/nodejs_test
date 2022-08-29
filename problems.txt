@@ -1,2 +1,2 @@
-fine for now
+invalid csrf on deployed server, works fine with browser but not with the attacker
 

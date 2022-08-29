@@ -91,7 +91,7 @@ server.use(addUserToReq);
 // Get image route
 server.get('/images/:imageFileName', async (req, res, next) => {
     try {
-        if (!req.params.imageUrl) {
+        if (req.params.imageFileName) {
             const person = await Adam.findOne({
                 where: {
                     imageUrl: join("images", req.params.imageFileName),
