@@ -1,4 +1,5 @@
 import User from "../models/user.js";
+import NewError from "../util/NewError.js";
 
 export default async function addUserToReq (req, res, next) {
     try {
@@ -8,7 +9,7 @@ export default async function addUserToReq (req, res, next) {
         }
         const user = await User.findByPk(req.session.user.id);
         if (!user)
-            throw new Error("Session Expired, Or Database Has Exploded");
+            throw new NewError("Session Expired, Or Database Has Exploded", "user");
         req.user = user;
         next();
     } catch (error) {

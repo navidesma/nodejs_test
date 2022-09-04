@@ -2,6 +2,7 @@ import Adam from "../models/adam.js";
 import validator from "../util/validator.js";
 
 import deleteFile from "../util/delete-file.js";
+import NewError from "../util/NewError.js";
 
 const ID_PATTERN = /^\d+$/g;
 const NAME_PATTERN = /^[a-zA-Z]+$/g;
@@ -11,16 +12,12 @@ const GENDER_PATTERN = /^(male||female)$/g;
 export async function createPerson(req, res, next) {
     try {
         if (!req.file) {
-            const error = new Error("No File Is Provided");
-            error.type = "user";
-            throw error;
+            throw new NewError("No File Is Provided", "user");
         }
         const validationResult = validator(req, ["name", NAME_PATTERN, "age", AGE_PATTERN, "gender", GENDER_PATTERN]);
         if (validationResult !== true) {
             await deleteFile(req.file.path);
-            const error = new Error(validationResult + ", Deleted Uploaded File Successfully.");
-            error.type = "user";
-            throw error;
+            throw new NewError(validationResult + ", Deleted Uploaded File Successfully.", "user");
         }
 
         const {name, age, gender} = req.body;
@@ -42,22 +39,16 @@ export async function deletePerson(req, res, next) {
     try {
         const validationResult = validator(req, ["id", ID_PATTERN], true);
         if (validationResult !== true) {
-            const error = new Error(validationResult);
-            error.type = "user";
-            throw error;
+            throw new NewError(validationResult);
         }
 
         const id = req.params.id;
         const person = await Adam.findByPk(id);
         if (!person) {
-            const error = new Error("This Person Doesn't Exist");
-            error.type = "user";
-            throw error;
+            throw new NewError("This Person Doesn't Exist", "user");
         }
         if (person.UserId !== req.user.id) {
-            const error = new Error(`This person doesn't belong to ${req.user.username}, Forbidden Request!`);
-            error.type = "user";
-            throw error;
+            throw new NewError(`This person doesn't belong to ${req.user.username}, Forbidden Request!`, "user");
         }
         await deleteFile(person.imageUrl);
 
@@ -71,22 +62,16 @@ export async function getPersonForEdit(req, res, next) {
     try {
         const validationResult = validator(req, ["id", ID_PATTERN], true);
         if (validationResult !== true)  {
-            const error = new Error(`This person doesn't belong to ${req.user.username}, Forbidden Request!`);
-            error.type = "user";
-            throw error;
+            throw new NewError(`This person doesn't belong to ${req.user.username}, Forbidden Request!`, "user");
         }
 
         const id = req.params.id;
         const person = await Adam.findByPk(id);
         if (!person) {
-            const error = new Error("This Person Doesn't Exist");
-            error.type = "user";
-            throw error;
+            throw new NewError("This Person Doesn't Exist", "user");
         }
         if (person.UserId !== req.user.id) {
-            const error = new Error(`This person doesn't belong to ${req.user.username}, Forbidden Request!`);
-            error.type = "user";
-            throw error;
+            throw new NewError(`This person doesn't belong to ${req.user.username}, Forbidden Request!`, "user");
         }
         
         const {name, age, gender} = person;
@@ -99,16 +84,12 @@ export async function editPerson(req, res, next) {
     try {
         const validationResult1 = validator(req, ["name", NAME_PATTERN, "age", AGE_PATTERN, "gender", GENDER_PATTERN]);
         if (validationResult1 !== true) {
-            const error = new Error(validationResult1);
-            error.type = "user";
-            throw error;
+            throw new NewError(validationResult1, "user");
         }
 
         const validationResult2 = validator(req, ["id", ID_PATTERN], true);
         if (validationResult2 !== true) {
-            const error = new Error(validationResult2);
-            error.type = "user";
-            throw error;
+            throw new NewError(validationResult2, "user");
         }
 
         const {id} = req.params;
@@ -117,14 +98,10 @@ export async function editPerson(req, res, next) {
 
         const person = await Adam.findByPk(id);
         if (!person) {
-            const error = new Error("This Person Doesn't Exist");
-            error.type = "user";
-            throw error;
+            throw new NewError("This Person Doesn't Exist", "user");
         }
         if (person.UserId !== req.user.id) {
-            const error = new Error(`This person doesn't belong to ${req.user.username}, Forbidden Request!`);
-            error.type = "user";
-            throw error;
+            throw new NewError(`This person doesn't belong to ${req.user.username}, Forbidden Request!`, "user");
         }
 
         person.name = name;

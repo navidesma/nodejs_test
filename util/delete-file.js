@@ -3,6 +3,7 @@ import {join} from "path";
 import {__dirname} from "./variables.js";
 
 import checkFileExistence from "./check-file-existance.js";
+import NewError from "./NewError.js";
 
 
 export default async function deleteFile(filePath) {
@@ -11,7 +12,7 @@ export default async function deleteFile(filePath) {
         if (doesFileExist) {
             unlink(join(__dirname, filePath), (error) => {
                 if (error)
-                    reject(new Error("Something went wrong with deleting the file"));
+                    reject(new NewError("Something went wrong with deleting the file"));
                 else
                     resolve();
             });

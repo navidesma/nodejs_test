@@ -19,6 +19,7 @@ import errorHandler from "./middleware/error-handler.js";
 import {__dirname} from "./util/variables.js";
 import logger from "./util/log-configuration.js";
 import checkFileExistence from "./util/check-file-existance.js";
+import NewError from "./util/NewError.js";
 
 //____________________________________________________________________________________________________________________
 
@@ -99,22 +100,16 @@ server.get('/images/:imageFileName', async (req, res, next) => {
                 }
             });
             if (!person) {
-                const error = new Error("You can't access this file");
-                error.type = "user";
-                throw error;
+                throw new NewError("You can't access this file", "user");
             }
             const filePath = join(__dirname, 'images', req.params.imageFileName);
             const doesFileExist = await checkFileExistence(filePath);
             if (!doesFileExist) {
-                const error = new Error("File Doesn't Exist");
-                error.type = "user";
-                throw error;
+                throw new NewError("File Doesn't Exist", "user");
             }
             res.sendFile(filePath);
         } else {
-            const error = new Error("Wrong URL");
-            error.type = "user";
-            throw error;
+            throw new NewError("Wrong URL", "user");
         }
     } catch (error) {
         res.status(400).send(error.message);
